@@ -138,21 +138,225 @@
 //    }
 //}
 
+//using UnityEngine;
+//using System.IO;
+//using System.Collections.Generic;
+
+//public class GameManager : MonoBehaviour
+//{
+//    [Header("Recording Folder Settings")]
+//    public string recordingsFolderName = "VRRecordings";
+
+//    private List<AudioClip> loadedClips = new List<AudioClip>();
+
+//    private void Start()
+//    {
+//        LoadAllRecordings();
+//        AssignClipsToChildren();
+//    }
+
+//    private void LoadAllRecordings()
+//    {
+//        loadedClips.Clear();
+//        string folderPath = Path.Combine(Application.persistentDataPath, recordingsFolderName);
+
+//        if (!Directory.Exists(folderPath))
+//        {
+//            Debug.LogWarning("Recordings folder not found: " + folderPath);
+//            return;
+//        }
+
+//        string[] files = Directory.GetFiles(folderPath, "*.wav");
+//        foreach (string path in files)
+//        {
+//            AudioClip clip = LoadWav(path);
+//            if (clip != null) loadedClips.Add(clip);
+//        }
+
+//        Debug.Log($"📂 Loaded {loadedClips.Count} clips from disk.");
+//    }
+
+//    private void AssignClipsToChildren()
+//    {
+//        if (loadedClips.Count == 0)
+//        {
+//            Debug.LogWarning("No clips to assign!");
+//            return;
+//        }
+
+//        Transform[] children = GetComponentsInChildren<Transform>();
+//        int clipIndex = 0;
+
+//        foreach (Transform child in children)
+//        {
+//            if (child == transform) continue;
+
+//            AudioSource source = child.GetComponent<AudioSource>();
+//            if (source == null) source = child.gameObject.AddComponent<AudioSource>();
+
+//            source.clip = loadedClips[clipIndex % loadedClips.Count];
+//            source.spatialBlend = 1f;
+//            source.loop = true;
+//            source.Play();
+
+//            clipIndex++;
+//        }
+//    }
+
+//    // Minimal WAV loader
+//    private AudioClip LoadWav(string path)
+//    {
+//        byte[] bytes = File.ReadAllBytes(path);
+//        if (bytes.Length < 44) return null;
+
+//        int channels = System.BitConverter.ToInt16(bytes, 22);
+//        int freq = System.BitConverter.ToInt32(bytes, 24);
+//        int dataStart = 44;
+//        int sampleCount = (bytes.Length - dataStart) / 2;
+
+//        float[] data = new float[sampleCount];
+//        int offset = dataStart;
+//        for (int i = 0; i < sampleCount; i++)
+//        {
+//            short s = System.BitConverter.ToInt16(bytes, offset);
+//            data[i] = s / 32768f;
+//            offset += 2;
+//        }
+
+//        AudioClip clip = AudioClip.Create(Path.GetFileNameWithoutExtension(path),
+//                                          sampleCount / channels,
+//                                          channels,
+//                                          freq,
+//                                          false);
+//        clip.SetData(data, 0);
+//        return clip;
+//    }
+//}
+//using UnityEngine;
+//using System.IO;
+//using System.Collections;
+//using System.Collections.Generic;
+
+//public class ClipAssigner : MonoBehaviour
+//{
+//    [Header("Recording Folder Settings")]
+//    public string recordingsFolderName = "VRRecordings";
+
+//    [Header("Playback Settings")]
+//    public float delayBetweenClips = 0.5f; // seconds
+
+//    private List<AudioClip> loadedClips = new List<AudioClip>();
+
+//    private void Start()
+//    {
+//        LoadAllRecordings();
+//        StartCoroutine(AssignClipsWithDelay());
+//    }
+
+//    private void LoadAllRecordings()
+//    {
+//        loadedClips.Clear();
+//        string folderPath = Path.Combine(Application.persistentDataPath, recordingsFolderName);
+
+//        if (!Directory.Exists(folderPath))
+//        {
+//            Debug.LogWarning("Recordings folder not found: " + folderPath);
+//            return;
+//        }
+
+//        string[] files = Directory.GetFiles(folderPath, "*.wav");
+//        foreach (string path in files)
+//        {
+//            AudioClip clip = LoadWav(path);
+//            if (clip != null) loadedClips.Add(clip);
+//        }
+
+//        Debug.Log($"📂 Loaded {loadedClips.Count} clips from disk.");
+//    }
+
+//    private IEnumerator AssignClipsWithDelay()
+//    {
+//        if (loadedClips.Count == 0)
+//        {
+//            Debug.LogWarning("No clips to assign!");
+//            yield break;
+//        }
+
+//        Transform[] children = GetComponentsInChildren<Transform>();
+//        int clipIndex = 0;
+
+//        foreach (Transform child in children)
+//        {
+//            if (child == transform) continue;
+
+//            AudioSource source = child.GetComponent<AudioSource>();
+//            if (source == null) source = child.gameObject.AddComponent<AudioSource>();
+
+//            source.clip = loadedClips[clipIndex % loadedClips.Count];
+//            source.spatialBlend = 1f;
+//            source.loop = true;
+
+//            yield return new WaitForSeconds(delayBetweenClips); // <-- delay before playing
+//            source.Play();
+
+//            clipIndex++;
+//        }
+//    }
+
+//    // -----------------------------
+//    // Minimal WAV loader
+//    private AudioClip LoadWav(string path)
+//    {
+//        byte[] bytes = File.ReadAllBytes(path);
+//        if (bytes.Length < 44) return null;
+
+//        int channels = System.BitConverter.ToInt16(bytes, 22);
+//        int freq = System.BitConverter.ToInt32(bytes, 24);
+//        int dataStart = 44;
+//        int sampleCount = (bytes.Length - dataStart) / 2;
+
+//        float[] data = new float[sampleCount];
+//        int offset = dataStart;
+//        for (int i = 0; i < sampleCount; i++)
+//        {
+//            short s = System.BitConverter.ToInt16(bytes, offset);
+//            data[i] = s / 32768f;
+//            offset += 2;
+//        }
+
+//        AudioClip clip = AudioClip.Create(Path.GetFileNameWithoutExtension(path),
+//                                          sampleCount / channels,
+//                                          channels,
+//                                          freq,
+//                                          false);
+//        clip.SetData(data, 0);
+//        return clip;
+//    }
+//}
 using UnityEngine;
 using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 
-public class GameManager : MonoBehaviour
+public class ClipAssigner : MonoBehaviour
 {
     [Header("Recording Folder Settings")]
     public string recordingsFolderName = "VRRecordings";
+
+    [Header("Playback Settings")]
+    public float delayBetweenClips = 0.5f; // seconds
+    [Range(0f, 1f)]
+    public float defaultVolume = 1f;       // default volume if individual volumes not set
+
+    [Header("Optional: Individual Volumes for Each Child")]
+    public List<float> childVolumes;       // size = number of children, 0-1
 
     private List<AudioClip> loadedClips = new List<AudioClip>();
 
     private void Start()
     {
         LoadAllRecordings();
-        AssignClipsToChildren();
+        StartCoroutine(AssignClipsWithDelay());
     }
 
     private void LoadAllRecordings()
@@ -176,16 +380,17 @@ public class GameManager : MonoBehaviour
         Debug.Log($"📂 Loaded {loadedClips.Count} clips from disk.");
     }
 
-    private void AssignClipsToChildren()
+    private IEnumerator AssignClipsWithDelay()
     {
         if (loadedClips.Count == 0)
         {
             Debug.LogWarning("No clips to assign!");
-            return;
+            yield break;
         }
 
         Transform[] children = GetComponentsInChildren<Transform>();
         int clipIndex = 0;
+        int childIndex = 0;
 
         foreach (Transform child in children)
         {
@@ -194,15 +399,27 @@ public class GameManager : MonoBehaviour
             AudioSource source = child.GetComponent<AudioSource>();
             if (source == null) source = child.gameObject.AddComponent<AudioSource>();
 
+            // assign clip
             source.clip = loadedClips[clipIndex % loadedClips.Count];
-            source.spatialBlend = 1f;
+            source.spatialBlend = 1f; // 3D audio
             source.loop = true;
+
+            // assign volume
+            if (childVolumes != null && childIndex < childVolumes.Count)
+                source.volume = Mathf.Clamp01(childVolumes[childIndex]);
+            else
+                source.volume = defaultVolume;
+
+            // delay before playing
+            yield return new WaitForSeconds(delayBetweenClips);
             source.Play();
 
             clipIndex++;
+            childIndex++;
         }
     }
 
+    // -----------------------------
     // Minimal WAV loader
     private AudioClip LoadWav(string path)
     {
