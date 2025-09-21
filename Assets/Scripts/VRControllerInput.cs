@@ -1,35 +1,29 @@
-﻿using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit;
+﻿//using UnityEngine;
+//using UnityEngine.InputSystem;
 
-public class VRControllerInput : MonoBehaviour
-{
-    public XRController leftController;      // assign your left-hand controller
-    public VRRecorder vrRecorder;            // your VRRecorder script
+//public class VRLeftTriggerRecorder : MonoBehaviour
+//{
+//    [Header("Assign VR Input Actions")]
+//    public VRInputActions inputActions;    // the auto-generated class
+//    public VRRecorder vrRecorder;          // your recording script
 
-    // Choose the button to press (primary button on left controller)
-    public InputHelpers.Button triggerButton = InputHelpers.Button.Trigger;
-    public float activationThreshold = 0.1f; // threshold for trigger press
+//    private void OnEnable()
+//    {
+//        if (inputActions == null) inputActions = new VRInputActions();
 
-    private bool isPressed = false;
+//        inputActions.LeftHand.TriggerPress.performed += OnTriggerPressed;
+//        inputActions.LeftHand.Enable();
+//    }
 
-    private void Update()
-    {
-        if (leftController == null || vrRecorder == null) return;
+//    private void OnDisable()
+//    {
+//        inputActions.LeftHand.TriggerPress.performed -= OnTriggerPressed;
+//        inputActions.LeftHand.Disable();
+//    }
 
-        bool triggerValue;
-        leftController.inputDevice.IsPressed(triggerButton, out triggerValue, activationThreshold);
-
-        // On trigger press
-        if (triggerValue && !isPressed)
-        {
-            isPressed = true;
-            vrRecorder.ToggleRecording();   // call the recording button
-            Debug.Log("🎙 Left controller triggered recording!");
-        }
-        // On trigger release
-        else if (!triggerValue && isPressed)
-        {
-            isPressed = false;
-        }
-    }
-}
+//    private void OnTriggerPressed(InputAction.CallbackContext ctx)
+//    {
+//        vrRecorder.ToggleRecording();
+//        Debug.Log("🎙 Left-hand trigger pressed, recording toggled!");
+//    }
+//}
