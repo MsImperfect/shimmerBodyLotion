@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 224b6d9bc1b93634ab0d08b8b9d3eb9c
+labels:
+- NaturalTilingTextures
+timeCreated: 1429768320
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35173
+  packageName: Natural Tiling Textures
+  packageVersion: 1.2
+  assetPath: Assets/NaturalTilingTextures/External/ShaderForge_NTT_Triplanar.mat
+  uploadId: 66624

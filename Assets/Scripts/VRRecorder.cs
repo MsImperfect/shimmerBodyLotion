@@ -1,5 +1,6 @@
 ﻿//using UnityEngine;
 //using System.IO;
+//using System.Collections;
 //using System.Collections.Generic;
 
 //public class VRRecorder : MonoBehaviour
@@ -9,37 +10,49 @@
 //    public int recordLength = 5;
 //    public int sampleRate = 44100;
 
-//    [HideInInspector]
-//    public List<AudioClip> audioClips = new List<AudioClip>();
+//    [Header("Folders")]
+//    private string mainFolderPath;
+//    private string positiveFolderPath;
+
+//    [HideInInspector] public List<AudioClip> audioClips = new List<AudioClip>();
+//    [HideInInspector] public List<AudioClip> positiveClips = new List<AudioClip>();
 
 //    private AudioClip recordedClip;
 //    private bool isRecording = false;
-//    private string folderPath;
+//    private bool isPositiveRecording = false; // <--- NEW: choose which folder to save to
 
 //    void Awake()
 //    {
-//        folderPath = Path.Combine(Application.persistentDataPath, "VRRecordings");
-//        if (!Directory.Exists(folderPath))
-//            Directory.CreateDirectory(folderPath);
+//        mainFolderPath = Path.Combine(Application.persistentDataPath, "VRRecordings");
+//        positiveFolderPath = Path.Combine(Application.persistentDataPath, "VRPositiveRecordings");
 
-//        Debug.Log("🎧 VR Recordings folder: " + folderPath);
+//        if (!Directory.Exists(mainFolderPath))
+//            Directory.CreateDirectory(mainFolderPath);
+
+//        if (!Directory.Exists(positiveFolderPath))
+//            Directory.CreateDirectory(positiveFolderPath);
+
+//        Debug.Log($"🎧 Main recordings folder: {mainFolderPath}");
+//        Debug.Log($"🎯 Positive recordings folder: {positiveFolderPath}");
 //    }
 
 //    void Start()
 //    {
-//        // Load any existing WAVs on startup
 //        LoadAllRecordings();
+//        LoadAllPositiveRecordings();
 //    }
 
 //    // ------------------------------
 //    // Button: Start/Stop recording
-//    public void ToggleRecording()
+//    public void ToggleRecording(bool saveToPositive = false)
 //    {
 //        Debug.Log("Button clicked!");
+//        isPositiveRecording = saveToPositive; // decide where to save
+
 //        if (!isRecording)
 //            StartRecording();
 //        else
-//            StopAndSave();
+//            StopRecordingAndSave();
 //    }
 
 //    private void StartRecording()
@@ -51,16 +64,37 @@
 //        }
 
 //        isRecording = true;
-//        recordedClip = Microphone.Start(null, false, recordLength, sampleRate);
 //        Debug.Log("🎙 Recording started...");
+//        StartCoroutine(RecordAndSaveCoroutine());
 //    }
 
-//    private void StopAndSave()
+//    private void StopRecordingAndSave()
 //    {
 //        if (!isRecording) return;
 //        isRecording = false;
 //        Microphone.End(null);
+//        Debug.Log("⏹ Recording stopped manually.");
+//    }
 
+//    private IEnumerator RecordAndSaveCoroutine()
+//    {
+//        recordedClip = Microphone.Start(null, false, recordLength, sampleRate);
+
+//        float elapsedTime = 0f;
+//        while (elapsedTime < recordLength && isRecording)
+//        {
+//            elapsedTime += Time.deltaTime;
+//            yield return null;
+//        }
+
+//        if (!isRecording)
+//            yield break;
+
+//        SaveClip();
+//    }
+
+//    private void SaveClip()
+//    {
 //        if (recordedClip == null)
 //        {
 //            Debug.LogWarning("No audio recorded!");
@@ -68,34 +102,56 @@
 //        }
 
 //        string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
-//        string fullPath = Path.Combine(folderPath, $"{fileName}_{timestamp}.wav");
+//        string folderToUse = isPositiveRecording ? positiveFolderPath : mainFolderPath;
+//        string fullPath = Path.Combine(folderToUse, $"{fileName}_{timestamp}.wav");
 
 //        SaveWav(recordedClip, fullPath);
 //        Debug.Log($"✅ Audio saved: {fullPath}");
 
-//        // Load the new clip immediately
 //        AudioClip newClip = LoadWav(fullPath);
-//        if (newClip != null) audioClips.Add(newClip);
+//        if (newClip != null)
+//        {
+//            if (isPositiveRecording)
+//                positiveClips.Add(newClip);
+//            else
+//                audioClips.Add(newClip);
+//        }
+
+//        isRecording = false;
 //    }
 
 //    // ------------------------------
-//    // Load all existing recordings
+//    // Load recordings
 //    public void LoadAllRecordings()
 //    {
 //        audioClips.Clear();
-//        if (!Directory.Exists(folderPath)) return;
+//        if (!Directory.Exists(mainFolderPath)) return;
 
-//        string[] files = Directory.GetFiles(folderPath, "*.wav");
+//        string[] files = Directory.GetFiles(mainFolderPath, "*.wav");
 //        foreach (string path in files)
 //        {
 //            AudioClip clip = LoadWav(path);
 //            if (clip != null) audioClips.Add(clip);
 //        }
-//        Debug.Log($"📂 Loaded {audioClips.Count} clips from {folderPath}");
+//        Debug.Log($"📂 Loaded {audioClips.Count} normal clips from {mainFolderPath}");
+//    }
+
+//    public void LoadAllPositiveRecordings()
+//    {
+//        positiveClips.Clear();
+//        if (!Directory.Exists(positiveFolderPath)) return;
+
+//        string[] files = Directory.GetFiles(positiveFolderPath, "*.wav");
+//        foreach (string path in files)
+//        {
+//            AudioClip clip = LoadWav(path);
+//            if (clip != null) positiveClips.Add(clip);
+//        }
+//        Debug.Log($"📂 Loaded {positiveClips.Count} positive clips from {positiveFolderPath}");
 //    }
 
 //    // ------------------------------
-//    // Save WAV (unchanged from before)
+//    // Save WAV
 //    private void SaveWav(AudioClip clip, string savePath)
 //    {
 //        float[] samples = new float[clip.samples * clip.channels];
@@ -118,6 +174,7 @@
 //            stream.Seek(0, SeekOrigin.Begin);
 //            WriteWavHeader(stream, clip.channels, clip.frequency, clip.samples * clip.channels);
 //            File.WriteAllBytes(savePath, stream.ToArray());
+//            Debug.Log("Audio Saved");
 //        }
 //    }
 
@@ -149,32 +206,42 @@
 //    // Minimal WAV loader (16-bit PCM)
 //    private AudioClip LoadWav(string path)
 //    {
-//        byte[] bytes = File.ReadAllBytes(path);
-//        if (bytes.Length < 44) return null;
-
-//        int channels = System.BitConverter.ToInt16(bytes, 22);
-//        int freq = System.BitConverter.ToInt32(bytes, 24);
-//        int dataStart = 44;
-//        int sampleCount = (bytes.Length - dataStart) / 2;
-
-//        float[] data = new float[sampleCount];
-//        int offset = dataStart;
-//        for (int i = 0; i < sampleCount; i++)
+//        try
 //        {
-//            short s = System.BitConverter.ToInt16(bytes, offset);
-//            data[i] = s / 32768f;
-//            offset += 2;
+//            byte[] bytes = File.ReadAllBytes(path);
+//            if (bytes.Length < 44) return null;
+
+//            int channels = System.BitConverter.ToInt16(bytes, 22);
+//            int freq = System.BitConverter.ToInt32(bytes, 24);
+//            int dataStart = 44;
+//            int sampleCount = (bytes.Length - dataStart) / 2;
+
+//            float[] data = new float[sampleCount];
+//            int offset = dataStart;
+//            for (int i = 0; i < sampleCount; i++)
+//            {
+//                short s = System.BitConverter.ToInt16(bytes, offset);
+//                data[i] = s / 32768f;
+//                offset += 2;
+//            }
+
+//            AudioClip clip = AudioClip.Create(Path.GetFileNameWithoutExtension(path),
+//                                              sampleCount / channels,
+//                                              channels,
+//                                              freq,
+//                                              false);
+//            clip.SetData(data, 0);
+//            return clip;
+//        }
+//        catch (System.Exception ex)
+//        {
+//            Debug.LogError($"Failed to load WAV file at {path}: {ex.Message}");
 //        }
 
-//        AudioClip clip = AudioClip.Create(Path.GetFileNameWithoutExtension(path),
-//                                          sampleCount / channels,
-//                                          channels,
-//                                          freq,
-//                                          false);
-//        clip.SetData(data, 0);
-//        return clip;
+//        return null;
 //    }
 //}
+
 using UnityEngine;
 using System.IO;
 using System.Collections;
@@ -385,4 +452,5 @@ public class VRRecorder : MonoBehaviour
 
         return null;
     }
+
 }

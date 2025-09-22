@@ -1,30 +1,52 @@
-using UnityEngine;
+﻿using UnityEngine;
+using System.Collections.Generic;
 
 public class Thought : MonoBehaviour
 {
     public GameObject flowerPrefab;
     private Vector3 originalPos;
-    private bool hasSpawned = false;
+    private AudioSource audioSource;
 
-    private void Start()
+    public GameManager manager;
+
+    void Start()
     {
         originalPos = transform.position;
         originalPos.y = 0;
+        audioSource = GetComponent<AudioSource>();
     }
 
-    void Update()
+    //private void OnDestroy()
+    //{
+    //    if (flowerPrefab != null)
+    //    {
+    //        Instantiate(flowerPrefab, originalPos, Quaternion.identity);
+    //        Debug.Log("Flower spawned at " + originalPos);
+    //    }
+    //    else
+    //    {
+    //        Debug.LogError("Flower Prefab is not assigned in the Inspector!");
+    //    }
+
+    //    if (audioSource != null)
+    //    {
+    //        audioSource.Stop();
+    //    }
+    //}
+
+    public void SilenceThoughtAndSpawnFlower()
     {
-        if (transform.position.y < -50 && !hasSpawned)
+        if (flowerPrefab != null)
         {
-            if (flowerPrefab != null)
-            {
-                GameObject flower = Instantiate(flowerPrefab, originalPos, Quaternion.identity);
-                hasSpawned = true;
-            }
-            else
-            {
-                Debug.LogError("Flower Prefab is not assigned in the Inspector!");
-            }
+            Instantiate(flowerPrefab, originalPos, Quaternion.identity);
+            Debug.Log("Flower spawned at " + originalPos);
         }
+
+        if (audioSource != null)
+            audioSource.Stop();
+
+        manager.destroyedObjects++;
+        Destroy(gameObject); // Destroy after spawning
     }
+
 }
